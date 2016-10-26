@@ -2,6 +2,34 @@ import numpy as np
 from numpy.linalg import inv
 import math
 
+
+#get mean and std for each feature
+def get_mean_std(dataset, feature_id):
+    mean = np.mean(dataset[:, feature_id], axis=0)
+    std = np.std(dataset[:, feature_id], axis=0)
+    return mean, std
+
+#probability for each feature for each observation
+def prob_gaussian(x, mean, std):
+    return np.exp(-((x - mean)**2) / (2 * (std**2))) * (1 / (np.sqrt(2 * math.pi) * std))
+    
+def Naive_bayes_likelyhood(X_features, means, stds):
+    prob = 1.
+    for i in range(len(X_features)):
+        prob *= prob_gaussian(X_features[i], means[i], stds[i])
+    return prob
+    
+def Naive_bayes_prediction(X_features, means1, stds1, means2, stds2, prior1, prior2):
+    prob_class1 = Naive_bayes_likelyhood(X_features, means1, stds1) * prior1
+    prob_class2 = Naive_bayes_likelyhood(X_features, means2, stds2) * prior2
+    if prob_class1 > prob_class2:
+        return 0
+    elif prob_class1 < prob_class2:
+        return 1
+    else:
+        return None
+
+
 data = np.loadtxt('hw2.txt', delimiter=',')
 accuracys = []
 for trial in range(10):
@@ -24,35 +52,9 @@ for trial in range(10):
     prior1 = prior1temp/(prior1temp + prior2temp)
     prior2 = prior2temp/(prior1temp + prior2temp)
     
-    #get mean and std for each feature
-    def get_mean_std(dataset, feature_id):
-        mean = np.mean(dataset[:, feature_id], axis=0)
-        std = np.std(dataset[:, feature_id], axis=0)
-        return mean, std
-    
     #training to get means and std for each class
     mean1_NB, std1_NB = get_mean_std(train_data_1, active_feat)
     mean2_NB, std2_NB = get_mean_std(train_data_2, active_feat)
-    
-    #probability for each feature for each observation
-    def prob_gaussian(x, mean, std):
-        return np.exp(-((x - mean)**2) / (2 * (std**2))) * (1 / (np.sqrt(2 * math.pi) * std))
-    
-    def Naive_bayes_likelyhood(X_features, means, stds):
-        prob = 1.
-        for i in range(len(X_features)):
-            prob *= prob_gaussian(X_features[i], means[i], stds[i])
-        return prob
-    
-    def Naive_bayes_prediction(X_features, means1, stds1, means2, stds2, prior1, prior2):
-        prob_class1 = Naive_bayes_likelyhood(X_features, means1, stds1) * prior1
-        prob_class2 = Naive_bayes_likelyhood(X_features, means2, stds2) * prior2
-        if prob_class1 > prob_class2:
-            return 0
-        elif prob_class1 < prob_class2:
-            return 1
-        else:
-            return None
         
     test_features = test_data[:, active_feat]
     correct = 0
